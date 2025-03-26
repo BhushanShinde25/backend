@@ -30,11 +30,13 @@ const ProductSchema = new mongoose.Schema({
 const Product = mongoose.model("Product", ProductSchema);
 
 // Image Schema (One-to-Many with Product)
+ 
 const ImageSchema = new mongoose.Schema({
   productId: { type: mongoose.Schema.Types.ObjectId, ref: "Product", required: true },
-  imageUrl: { type: String, required: true }
+  imageUrls: { type: String, required: true }, // Store multiple image URLs
 });
 
+ 
 const Image = mongoose.model("Image", ImageSchema);
 
 // Poster Schema (One-to-One with UserProfile)

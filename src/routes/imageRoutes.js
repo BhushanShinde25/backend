@@ -1,16 +1,17 @@
 import express from "express";
+import upload  from "../middlewares/upload.js";
 import {
-  uploadImage,
-  getAllImages,
-  getImageById,
-  deleteImage
+  uploadImages,
+  getImagesByProductId,
+  updateImage,
+  deleteImages
 } from "../controllers/imageController.js";
 
 const router = express.Router();
 
-router.post("/", uploadImage); // Upload an image
-router.get("/", getAllImages); // Get all images
-router.get("/:id", getImageById); // Get a specific image
-router.delete("/:id", deleteImage); // Delete an image
+router.post("/",upload.array("images", 5), uploadImages); // Upload an image
+router.get("/:productId", getImagesByProductId); // Get all images
+router.put("/update/:id", upload.single("images"),updateImage); // Get a specific image
+router.delete("/delete/:productId", deleteImages); // Delete an image
 
 export default router;

@@ -6,7 +6,8 @@ import {
   getProductById,
   updateProduct,
   deleteProduct,
-  getProductsByCompanyId
+  getProductsByCompanyId,
+  getProductsByCategoryId
 } from "../controllers/productController.js";
 
 const router = express.Router();
@@ -16,7 +17,7 @@ router.get("/", getAllProducts); // Get all products
 router.get("/:id", getProductById); // Get a specific product
 router.get("/company/:companyId", getProductsByCompanyId);
 
-
+router.get("/category/:categoryId", getProductsByCategoryId);
 router.put("/:id", updateProduct); // Update a product
 router.delete("/:id", deleteProduct); // Delete a product
 
