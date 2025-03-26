@@ -6,11 +6,14 @@ import {
   getAllCompanies,
   getCompanyById,
   updateCompany,
-  deleteCompany
+  deleteCompany,
+  loginCompany
 } from "../controllers/companyController.js";
 
 const router = express.Router();
 
+router.post("/login",loginCompany)
+router.post("/", upload.single("companyLogo") ,createCompany); // Create a new company
 router.post("/", upload.single("companyLogo") , authMiddleware ,createCompany); // Create a new company
 router.get("/", getAllCompanies); // Get all companies
 router.get("/:id", getCompanyById); // Get a specific company

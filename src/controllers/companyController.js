@@ -1,9 +1,41 @@
 import fs from "fs"; // Import file system module
 import {Company} from "../models/User.js";
-
+import jwt from "jsonwebtoken";
+import bcrypt from "bcryptjs";
 // Create a new company
  
 
+export const loginCompany = async (req, res) => {
+  try {
+    console.log(req.body); // Debugging: Check received request body
+
+    const { email, password } = req.body;
+
+    // Check if company exists
+    const existingCompany = await Company.findOne({ email });
+    if (!existingCompany) {
+      return res.status(400).json({ message: "Company does not exist" });
+    }
+
+    // Compare password
+    const isPasswordValid = await bcrypt.compare(password, existingCompany.password);
+    if (!isPasswordValid) {
+      return res.status(401).json({ message: "Invalid email or password" });
+    }
+
+    // Generate JWT token
+    const token = jwt.sign(
+      { id: existingCompany._id, email: existingCompany.email },
+      process.env.JWT_SECRET,
+      { expiresIn: "7d" } // Token valid for 7 days
+    );
+
+    res.status(200).json({ user: existingCompany, token });
+  } catch (error) {
+    console.error("Error logging in:", error);
+    res.status(500).json({ message: "Error logging in", error });
+  }
+};
 export const createCompany = async (req, res) => {
   try {
     console.log(req.body);
@@ -12,15 +44,39 @@ export const createCompany = async (req, res) => {
     const { companyName, email, password, companyCategory } = req.body;
     const companyLogo = req.file ? req.file.path : null; // Save file path
 
-    const newCompany = new Company({ companyName, email, password, companyLogo, companyCategory });
+    // Check if company already exists
+    const existingCompany = await Company.findOne({ email });
+    if (existingCompany) {
+      return res.status(400).json({ message: "Company already exists" });
+    }
+
+    // Hash password
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // Create new company
+    const newCompany = new Company({
+      companyName,
+      email,
+      password: hashedPassword, // Store hashed password
+      companyLogo,
+      companyCategory,
+    });
+
     await newCompany.save();
 
-    res.status(201).json(newCompany);
+    // Generate JWT token
+    const token = jwt.sign(
+      { id: newCompany._id, email: newCompany.email },
+      process.env.JWT_SECRET,
+      { expiresIn: "7d" } // Token valid for 7 days
+    );
+
+    res.status(201).json({ user: newCompany, token });
   } catch (error) {
+    console.error("Error creating company:", error);
     res.status(500).json({ message: "Error creating company", error });
   }
 };
-
 // Get all companies
 export const getAllCompanies = async (req, res) => {
   try {
