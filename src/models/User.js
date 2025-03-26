@@ -65,4 +65,4 @@ const RatingSchema = new mongoose.Schema({
 
 const Rating = mongoose.model("Rating", RatingSchema);
 
-export { Company, Category, Product, Image, Poster, User, Rating };
+export { Company , Category, Product, Image, Poster, User, Rating };
