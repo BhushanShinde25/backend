@@ -1,5 +1,6 @@
 import express from "express";
 import upload  from "../middlewares/upload.js";
+import authMiddleware from "../middlewares/auth.middleware.js";
 import {
   createCompany,
   getAllCompanies,
@@ -10,7 +11,7 @@ import {
 
 const router = express.Router();
 
-router.post("/", upload.single("companyLogo") ,createCompany); // Create a new company
+router.post("/", upload.single("companyLogo") , authMiddleware ,createCompany); // Create a new company
 router.get("/", getAllCompanies); // Get all companies
 router.get("/:id", getCompanyById); // Get a specific company
 router.put("/:id", upload.single("companyLogo") , updateCompany); // Update a company

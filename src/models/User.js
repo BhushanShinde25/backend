@@ -33,7 +33,7 @@ const Product = mongoose.model("Product", ProductSchema);
  
 const ImageSchema = new mongoose.Schema({
   productId: { type: mongoose.Schema.Types.ObjectId, ref: "Product", required: true },
-  imageUrls: { type: String, required: true }, // Store multiple image URLs
+  imageUrls: { type: String, required: true },  
 });
 
  
@@ -51,7 +51,8 @@ const Poster = mongoose.model("Poster", PosterSchema);
 const UserSchema = new mongoose.Schema({
   userName: { type: String, required: true },
   email: { type: String, required: true, unique: true },
-  password: { type: String, required: true }
+  password: { type: String, required: true },
+  companyId: { type: mongoose.Schema.Types.ObjectId, ref: "Company", required: true },
 });
 
 const User = mongoose.model("User", UserSchema);
