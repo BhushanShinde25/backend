@@ -14,6 +14,6 @@ router.post("/",upload, createPoster); // Create a new poster
 router.get("/", getAllPosters); // Get all posters
 router.get("/:id", getPosterById); // Get a specific poster
 router.put("/:id", updatePoster); // Update a poster
-router.delete("/:id", deletePoster); // Delete a poster
+router.delete("/delete", deletePoster); // Delete a poster
 
 export default router;
