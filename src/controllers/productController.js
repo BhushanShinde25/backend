@@ -47,13 +47,26 @@ export const createProduct = async (req, res) => {
 // Get all products
 export const getAllProducts = async (req, res) => {
   try {
+    // Fetch products and populate categoryId
     const products = await Product.find().populate("categoryId");
-    res.json(products);
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-};
 
+    // Fetch images for each product
+    const productsWithImages = await Promise.all(
+      products.map(async (product) => {
+        const images = await Image.find({ productId: product._id });
+
+        return {
+          ...product.toObject(),
+          images, // Attach images to each product
+        };
+      })
+    );
+
+    res.json({products:productsWithImages});
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
 // Get product by ID
 export const getProductById = async (req, res) => {
   try {
@@ -68,25 +81,33 @@ export const getProductById = async (req, res) => {
 // by company id 
 export const getProductsByCompanyId = async (req, res) => {
   try {
-    const products = await Product.find()
-      .populate({
-        path: "categoryId",
-        match: { companyId: req.params.companyId } // Filtering by companyId
-      })
-      .exec();
+    const products = await Product.find().populate("categoryId");
 
-    // Remove products that have a null category (not matching the companyId)
-    const filteredProducts = products.filter((product) => product.categoryId !== null);
+    // Filter products by companyId
+    const filteredProducts = products.filter(
+      (product) => product.categoryId && product.categoryId.companyId.toString() === req.params.companyId
+    );
 
     if (filteredProducts.length === 0) {
       return res.status(404).json({ message: "No products found for this company" });
     }
 
-    res.status(200).json(filteredProducts);
+    // Fetch images for all products in one query
+    const productIds = filteredProducts.map((p) => p._id);
+    const images = await Image.find({ productId: { $in: productIds } });
+
+    // Attach images to corresponding products
+    const productsWithImages = filteredProducts.map((product) => ({
+      ...product.toObject(),
+      images: images.filter((img) => img.productId.toString() === product._id.toString()),
+    }));
+
+    res.json(productsWithImages);
   } catch (error) {
     res.status(500).json({ message: "Error fetching products", error: error.message });
   }
 };
+
 
 
 // by category 
@@ -107,12 +128,56 @@ export const getProductsByCategoryId = async (req, res) => {
 // Update product
 export const updateProduct = async (req, res) => {
   try {
-    const updatedProduct = await Product.findByIdAndUpdate(req.params.id, req.body, { new: true });
-    res.json(updatedProduct);
+    // Step 1: Extract product data from request body
+    const { productName, price, Discount, categoryId } = req.body;
+
+    // Step 2: Find and update the product
+    const updatedProduct = await Product.findByIdAndUpdate(
+      req.params.id,
+      { productName, price, Discount, categoryId },
+      { new: true }
+    );
+
+    if (!updatedProduct) {
+      return res.status(404).json({ message: "Product not found" });
+    }
+
+    // Step 3: Check if images were uploaded
+    if (req.files && Object.keys(req.files).length > 0) {
+      const imageFields = ["image1", "image2", "image3"];
+      let uploadedImages = [];
+
+      imageFields.forEach((field) => {
+        if (req.files[field]) {
+          uploadedImages.push({
+            productId: updatedProduct._id,
+            imageUrls: `/uploads/${req.files[field][0].filename}`,
+          });
+        }
+      });
+
+      // Step 4: Remove existing images and insert new ones
+      await Image.deleteMany({ productId: updatedProduct._id });
+      const savedImages = await Image.insertMany(uploadedImages);
+
+      return res.status(200).json({
+        message: "Product updated successfully",
+        product: updatedProduct,
+        images: savedImages,
+      });
+    }
+
+    // Step 5: Return response without updating images
+    res.status(200).json({
+      message: "Product updated successfully",
+      product: updatedProduct,
+    });
+
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(500).json({ message: "Server error", error: error.message });
   }
 };
+
 
 // Delete product
 export const deleteProduct = async (req, res) => {

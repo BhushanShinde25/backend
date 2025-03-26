@@ -42,7 +42,7 @@ const Image = mongoose.model("Image", ImageSchema);
 // Poster Schema (One-to-One with UserProfile)
 const PosterSchema = new mongoose.Schema({
   companyId: { type: mongoose.Schema.Types.ObjectId, ref: "Company", required: true },
-  imageUrl: { type: String, required: true }
+  imageUrl: [{ type: String, required: true }]
 });
 
 const Poster = mongoose.model("Poster", PosterSchema);
