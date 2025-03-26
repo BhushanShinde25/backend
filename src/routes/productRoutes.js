@@ -1,5 +1,6 @@
 
 import express from "express";
+import upload from "../middlewares/upload1.js";
 import {
   createProduct,
   getAllProducts,
@@ -12,7 +13,7 @@ import {
 
 const router = express.Router();
 
-router.post("/", createProduct); // Create a new product
+router.post("/", upload ,  createProduct); // Create a new product
 router.get("/", getAllProducts); // Get all products
 router.get("/:id", getProductById); // Get a specific product
 router.get("/company/:companyId", getProductsByCompanyId);

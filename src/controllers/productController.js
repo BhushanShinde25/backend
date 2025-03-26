@@ -1,15 +1,48 @@
-import {Product} from "../models/User.js";
+import {Product,Image} from "../models/User.js";
 
 // Create a new product
 export const createProduct = async (req, res) => {
   try {
-    const product = new Product(req.body);
-    await product.save();
-    res.status(201).json(product);
+    // Step 1: Extract product data from request body
+    const { productName, price, Discount, categoryId } = req.body;
+
+    // Step 2: Create and save the product
+    const newProduct = new Product({ productName, price, Discount, categoryId });
+    const savedProduct = await newProduct.save();
+
+    // Step 3: Check if images were uploaded
+    if (!req.files || Object.keys(req.files).length === 0) {
+      return res.status(400).json({ message: "No images uploaded" });
+    }
+
+    // Step 4: Handle image uploads and associate them with the product
+    const imageFields = ["image1", "image2", "image3"];
+    let uploadedImages = [];
+
+    imageFields.forEach((field) => {
+      if (req.files[field]) {
+        uploadedImages.push({
+          productId: savedProduct._id, // Associate image with the newly created product
+          imageUrls: `/uploads/${req.files[field][0].filename}`,
+        });
+      }
+    });
+
+    // Step 5: Store images in the database
+    const savedImages = await Image.insertMany(uploadedImages);
+
+    // Step 6: Return response with product and images
+    res.status(201).json({
+      message: "Product created successfully",
+      product: savedProduct,
+      images: savedImages,
+    });
+
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(500).json({ message: "Server error", error: error.message });
   }
 };
+
 
 // Get all products
 export const getAllProducts = async (req, res) => {

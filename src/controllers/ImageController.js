@@ -57,32 +57,68 @@
  
 
 // Upload multiple images
+// export const uploadImages = async (req, res) => {
+//   try {
+//     if (!req.files || req.files.length === 0) {
+//       return res.status(400).json({ message: "No images uploaded" });
+//     }
+
+//     // Store image URLs
+//     const images = await Promise.all(
+//       req.files.map(async (file,i) => {
+//         const newImage = new Image({
+//           productId: req.body.productId,
+//           imageUrls: `/uploads/${file.filename}`, // Store file path
+//         });
+//         return await newImage.save();
+//       })
+//     );
+
+//     res.status(201).json({ message: "Images uploaded successfully", images });
+
+
+//     // Create image document
+  
+//   } catch (error) {
+//     res.status(500).json({ message: error.message });
+//   }
+// };
+ 
 export const uploadImages = async (req, res) => {
   try {
-    if (!req.files || req.files.length === 0) {
+    if (!req.files || Object.keys(req.files).length === 0) {
       return res.status(400).json({ message: "No images uploaded" });
     }
 
-    // Store image URLs
-    const images = await Promise.all(
-      req.files.map(async (file,i) => {
-        const newImage = new Image({
-          productId: req.body.productId,
-          imageUrls: `/uploads/${file.filename}`, // Store file path
+    const { productId } = req.body;
+    if (!productId) {
+      return res.status(400).json({ message: "Product ID is required" });
+    }
+
+    const imageFields = ["image1", "image2", "image3"];
+    let uploadedImages = [];
+
+    imageFields.forEach((field) => {
+      if (req.files[field]) {
+        uploadedImages.push({
+          productId,
+          imageUrls: `/uploads/${req.files[field][0].filename}`, // ✅ Use imageUrls (plural)
         });
-        return await newImage.save();
-      })
-    );
+      }
+    });
 
-    res.status(201).json({ message: "Images uploaded successfully", images });
+    // Store images in the database
+    const savedImages = await Image.insertMany(uploadedImages);
 
-
-    // Create image document
-  
+    res.status(201).json({
+      message: "Images uploaded successfully",
+      images: savedImages,
+    });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(500).json({ message: "Server error", error: error.message });
   }
 };
+
 
 
 export const getImagesByProductId = async (req, res) => {
