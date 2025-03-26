@@ -31,6 +31,22 @@ export const getCategoryById = async (req, res) => {
   }
 };
 
+// get by compny id\
+export const getCategoriesByCompanyId = async (req, res) => {
+  try {
+    const categories = await Category.find({ companyId: req.params.id }).populate("companyId");
+    
+    if (categories.length === 0) {
+      return res.status(404).json({ message: "No categories found for this company" });
+    }
+
+    res.status(200).json(categories);
+  } catch (error) {
+    res.status(500).json({ message: "Error fetching categories", error: error.message });
+  }
+};
+
+
 // Update category
 export const updateCategory = async (req, res) => {
   try {

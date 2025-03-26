@@ -31,6 +31,30 @@ export const getProductById = async (req, res) => {
   }
 };
 
+
+// by company id 
+export const getProductsByCompanyId = async (req, res) => {
+  try {
+    const products = await Product.find()
+      .populate({
+        path: "categoryId",
+        match: { companyId: req.params.companyId } // Filtering by companyId
+      })
+      .exec();
+
+    // Remove products that have a null category (not matching the companyId)
+    const filteredProducts = products.filter((product) => product.categoryId !== null);
+
+    if (filteredProducts.length === 0) {
+      return res.status(404).json({ message: "No products found for this company" });
+    }
+
+    res.status(200).json(filteredProducts);
+  } catch (error) {
+    res.status(500).json({ message: "Error fetching products", error: error.message });
+  }
+};
+
 // Update product
 export const updateProduct = async (req, res) => {
   try {

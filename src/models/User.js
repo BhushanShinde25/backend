@@ -14,7 +14,7 @@ const Company = mongoose.model("Company", CompanySchema);
 // Category Schema (One-to-Many with UserProfile)
 const CategorySchema = new mongoose.Schema({
   categoryName: { type: String, required: true },
-  companyId: { type: mongoose.Schema.Types.ObjectId, ref: "UserProfile", required: true }
+  companyId: { type: mongoose.Schema.Types.ObjectId, ref: "Company", required: true }
 });
 
 const Category = mongoose.model("Category", CategorySchema);
@@ -22,7 +22,8 @@ const Category = mongoose.model("Category", CategorySchema);
 // Product Schema (One-to-Many with Category)
 const ProductSchema = new mongoose.Schema({
   productName: { type: String, required: true },
-  priceDiscount: { type: Number, required: true },
+  price: { type: Number, required: true },
+  Discount: { type: Number, required: true },
   categoryId: { type: mongoose.Schema.Types.ObjectId, ref: "Category", required: true }
 });
 
@@ -38,7 +39,7 @@ const Image = mongoose.model("Image", ImageSchema);
 
 // Poster Schema (One-to-One with UserProfile)
 const PosterSchema = new mongoose.Schema({
-  companyId: { type: mongoose.Schema.Types.ObjectId, ref: "UserProfile", required: true },
+  companyId: { type: mongoose.Schema.Types.ObjectId, ref: "Company", required: true },
   imageUrl: { type: String, required: true }
 });
 

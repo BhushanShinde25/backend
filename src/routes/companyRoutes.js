@@ -1,4 +1,5 @@
 import express from "express";
+import upload  from "../middlewares/upload.js";
 import {
   createCompany,
   getAllCompanies,
@@ -9,10 +10,10 @@ import {
 
 const router = express.Router();
 
-router.post("/", createCompany); // Create a new company
+router.post("/", upload.single("companyLogo") ,createCompany); // Create a new company
 router.get("/", getAllCompanies); // Get all companies
 router.get("/:id", getCompanyById); // Get a specific company
-router.put("/:id", updateCompany); // Update a company
+router.put("/:id", upload.single("companyLogo") , updateCompany); // Update a company
 router.delete("/:id", deleteCompany); // Delete a company
 
 export default router;
