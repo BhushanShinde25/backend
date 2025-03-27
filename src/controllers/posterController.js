@@ -1,18 +1,45 @@
 import {Poster} from "../models/User.js";
+import multer from "multer";
 
 // ✅ Create a new poster
 export const createPoster = async (req, res) => {
   try {
-    const { companyId, image } = req.body;
+    if (!req.files || Object.keys(req.files).length === 0) {
+      return res.status(400).json({ success: false, message: "No files uploaded" });
+    }
 
-    const newPoster = new Poster({ companyId, image });
+    const { companyId } = req.body;
+
+    // ✅ Delete the existing poster for this company before creating a new one
+
+
+    // ✅ Extract uploaded file paths correctly as an array
+    const imagePaths = [];
+
+    ["image1", "image2", "image3"].forEach((field) => {
+      if (req.files[field]) {
+        imagePaths.push(`/uploads/${req.files[field][0].filename}`);
+      }
+    });
+    await Poster.findOneAndDelete({ companyId });
+    // ✅ Create new Poster entry with an array
+    const newPoster = new Poster({
+      companyId,
+      imageUrl: imagePaths, // ✅ Corrected format: Array of strings
+    });
+
     await newPoster.save();
 
-    res.status(201).json({ success: true, message: "Poster created successfully", poster: newPoster });
+    res.status(201).json({
+      success: true,
+      message: "Poster created successfully! Previous poster (if any) was deleted.",
+      poster: newPoster,
+    });
   } catch (error) {
     res.status(500).json({ success: false, message: "Error creating poster", error: error.message });
   }
 };
+
 
 // ✅ Get all posters
 export const getAllPosters = async (req, res) => {
@@ -27,7 +54,7 @@ export const getAllPosters = async (req, res) => {
 // ✅ Get a single poster by ID
 export const getPosterById = async (req, res) => {
   try {
-    const poster = await Poster.findById(req.params.id).populate("companyId", "companyName");
+    const poster = await Poster.findOne({companyId:req.params.id}).populate("companyId", "companyName");
     
     if (!poster) {
       return res.status(404).json({ success: false, message: "Poster not found" });

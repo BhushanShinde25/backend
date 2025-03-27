@@ -19,7 +19,7 @@ router.get("/:id", getProductById); // Get a specific product
 router.get("/company/:companyId", getProductsByCompanyId);
 
 router.get("/category/:categoryId", getProductsByCategoryId);
-router.put("/:id", updateProduct); // Update a product
+router.put("/:id",upload , updateProduct); // Update a product
 router.delete("/:id", deleteProduct); // Delete a product
 
 export default router;
