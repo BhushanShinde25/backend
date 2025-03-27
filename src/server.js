@@ -8,3 +8,7 @@ const PORT = process.env.PORT || 0;
 connectDB().then(() => {
   app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
 });
+export default async function handler(req, res) {
+  await connectDB();
+  return app(req, res); // Vercel handles requests differently
+}
