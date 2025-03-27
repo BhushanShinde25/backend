@@ -8,20 +8,24 @@ export const createPoster = async (req, res) => {
     if (!req.files || Object.keys(req.files).length === 0) {
       return res.status(400).json({ success: false, message: "No files uploaded" });
     }
+
     const { companyId } = req.body;
+    if (!companyId) {
+      return res.status(400).json({ success: false, message: "Company ID is required" });
+    }
+
     // ✅ Delete existing poster before creating a new one
-    await Poster.delete({ companyId });
+    await Poster.deleteOne({ companyId });
 
     // ✅ Extract uploaded file paths as an array
     const imagePaths = [];
-
     ["image1", "image2", "image3"].forEach((field) => {
       if (req.files[field]) {
-        imagePaths.push(`/uploads/${req.files[field][0].filename}`);
+        req.files[field].forEach((file) => imagePaths.push(`/uploads/${file.filename}`));
       }
     });
 
-    // ✅ Create new poster entry with an array
+    // ✅ Create new poster entry
     const newPoster = new Poster({
       companyId,
       imageUrl: imagePaths, // ✅ Ensure it's an array
@@ -35,6 +39,7 @@ export const createPoster = async (req, res) => {
       poster: newPoster,
     });
   } catch (error) {
+    console.error("Error creating poster:", error);
     res.status(500).json({ success: false, message: "Error creating poster", error: error.message });
   }
 };
