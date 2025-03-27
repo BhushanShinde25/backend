@@ -4,7 +4,7 @@ import path from "path";
 // Set storage engine
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, "uploads/"); // Ensure this folder exists
+    cb(null, "public/uploads/"); // Ensure this folder exists
   },
   filename: (req, file, cb) => {
     cb(null, `${Date.now()}-${file.originalname}`);
@@ -24,7 +24,7 @@ const fileFilter = (req, file, cb) => {
 // Upload middleware
 const upload = multer({
   storage,
-  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
+  limits: { fileSize: 10 * 1024 * 1024 }, // 5MB limit
   fileFilter,
 });
 

@@ -105,14 +105,11 @@ export const updateCompany = async (req, res) => {
   try {
     const company = await Company.findById(req.params.id);
     if (!company) return res.status(404).json({ message: "Company not found" });
-
     // Check if a new image is uploaded
     let companyLogo = company.companyLogo; // Keep old image by default
     if (req.file) {
       // Delete old image if it exists
-      if (company.companyLogo) {
-        fs.unlinkSync(company.companyLogo); // Remove old image from uploads folder
-      }
+
       companyLogo = req.file.path; // Save new image path
     }
 
