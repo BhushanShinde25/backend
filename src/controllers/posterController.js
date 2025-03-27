@@ -1,6 +1,7 @@
 import {Poster} from "../models/User.js";
 import multer from "multer";
-
+import path from 'path';
+import fs from "fs";
 // ✅ Create a new poster
 export const createPoster = async (req, res) => {
   try {
@@ -9,23 +10,25 @@ export const createPoster = async (req, res) => {
     }
 
     const { companyId } = req.body;
+    if (!companyId) {
+      return res.status(400).json({ success: false, message: "Company ID is required" });
+    }
 
-    // ✅ Delete the existing poster for this company before creating a new one
+    // ✅ Delete existing poster before creating a new one
+    await Poster.deleteOne({ companyId });
 
-
-    // ✅ Extract uploaded file paths correctly as an array
+    // ✅ Extract uploaded file paths as an array
     const imagePaths = [];
-
     ["image1", "image2", "image3"].forEach((field) => {
       if (req.files[field]) {
-        imagePaths.push(`/uploads/${req.files[field][0].filename}`);
+        req.files[field].forEach((file) => imagePaths.push(`/uploads/${file.filename}`));
       }
     });
-    await Poster.findOneAndDelete({ companyId });
-    // ✅ Create new Poster entry with an array
+
+    // ✅ Create new poster entry
     const newPoster = new Poster({
       companyId,
-      imageUrl: imagePaths, // ✅ Corrected format: Array of strings
+      imageUrl: imagePaths, // ✅ Ensure it's an array
     });
 
     await newPoster.save();
@@ -36,6 +39,7 @@ export const createPoster = async (req, res) => {
       poster: newPoster,
     });
   } catch (error) {
+    console.error("Error creating poster:", error);
     res.status(500).json({ success: false, message: "Error creating poster", error: error.message });
   }
 };
@@ -85,13 +89,39 @@ export const updatePoster = async (req, res) => {
 // ✅ Delete a poster
 export const deletePoster = async (req, res) => {
   try {
-    const poster = await Poster.findByIdAndDelete(req.params.id);
+    const { companyId, image } = req.body;
 
-    if (!poster) {
-      return res.status(404).json({ success: false, message: "Poster not found" });
+    if (!companyId || !image) {
+      return res.status(400).json({ success: false, message: "Company ID and image path are required." });
     }
 
-    res.status(200).json({ success: true, message: "Poster deleted successfully" });
+    // Find the poster document by companyId
+    const poster = await Poster.findOne({ companyId });
+    if (!poster) {
+      return res.status(404).json({ success: false, message: "Company posters not found." });
+    }
+    console.log(poster)
+    console.log(image)
+    // Filter out the image from the imageUrl array
+    const updatedImages = poster.imageUrl.filter((img) => img !== image);
+
+    if (updatedImages.length === poster.imageUrl.length) {
+      return res.status(404).json({ success: false, message: "Image not found in the poster list." });
+    }
+
+    // Update the document in the database
+    await Poster.findOneAndUpdate({ companyId }, { imageUrl: updatedImages });
+
+    // Delete the file from the server (optional)
+    const filePath = path.join("src/public", image); // Adjust the folder path as needed
+    fs.unlink(filePath, (err) => {
+      if (err) {
+        console.warn("Failed to delete file:", err.message);
+      }
+    });
+
+    res.status(200).json({ success: true, message: "Poster deleted successfully." });
+
   } catch (error) {
     res.status(500).json({ success: false, message: "Error deleting poster", error: error.message });
   }
